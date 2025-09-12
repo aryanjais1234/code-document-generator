@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Legacy Codebase Documentation Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar card" id="sidebar">
+        <button class="drawer-btn" id="drawerBtn" title="Toggle History Drawer">
+          ☰
+        </button>
+        <div id="drawer" class="drawer">
+          <button class="new-chat-btn" id="newChatBtn" title="New Chat">
+            + New Chat
+          </button>
+          <div
+            style="
+              margin-top: 15px;
+              margin-bottom: 8px;
+              color: var(--muted);
+              font-size: 18px;
+            "
+          >
+            History
+          </div>
+          <div class="search-history" id="historyList" aria-live="polite"></div>
+          <button class="clear-btn" id="clearHistory">Clear history</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="card header">
+          <div class="brand">
+            <small>Legacy Codebase Documentation Assistant</small>
+          </div>
+        </div>
+
+        <div
+          class="card chat-wrapper"
+          style="display: flex; flex-direction: column; gap: 10px; height: 70%"
+        >
+          <div class="chat" id="chat" aria-live="polite"></div>
+        </div>
+
+        <div class="card input-wrapper" style="padding: 12px; margin: 8px">
+          <div class="input-row">
+            <div
+              class="input"
+              role="group"
+              aria-label="Message input and attachments"
+            >
+              <textarea
+                id="textInput"
+                class="text-in"
+                placeholder="Ask about the codebase, paste snippets, or attach files..."
+                rows="2"
+                style="resize: vertical"
+              ></textarea>
+              <label class="attach-btn" title="Attach files">
+                📎
+                <input id="fileInput" class="file-input" type="file" multiple />
+              </label>
+              <button class="attach-btn" id="imgBtn" title="Attach images">
+                🖼️
+              </button>
+              <button class="btn" id="sendBtn">Send</button>
+            </div>
+          </div>
+          <div class="file-preview" id="previewArea" aria-hidden="false"></div>
+        </div>
+      </main>
+    </div>
+
+    {% if documentation %}
+    <div id="documentation-output" style="display: none">
+      {{ documentation }}
+    </div>
+    {% endif %}
+
+    <script src="{{ url_for('static', path='app.js') }}"></script>
+  </body>
+</html>

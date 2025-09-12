@@ -1,0 +1,152 @@
+Step 1: Set Up Project Structure
+
+project-root/
+├── app/
+│   ├── main.py          # FastAPI app
+│   ├── prompts.py       # Prompt templates
+│   ├── openai_client.py # Handles OpenAI API calls
+│   ├── templates/
+│   │   └── index.html   # Web UI
+├── requirements.txt
+├── .env                 # API keys
+
+
+Step 2: Install Dependencies
+
+pip install fastapi uvicorn openai python-dotenv jinja2
+
+
+requirements.txt:
+fastapi
+uvicorn
+openai
+python-dotenv
+jinja2
+
+
+
+Step 3: Create a Basic Web App (FastAPI)
+
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from app.openai_client import generate_documentation
+
+app = FastAPI()
+templates = Jinja2Templates(directory="app/templates")
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.post("/generate", response_class=HTMLResponse)
+async def generate(request: Request, code_snippet: str = Form(...)):
+    documentation = generate_documentation(code_snippet)
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "code_snippet": code_snippet,
+        "documentation": documentation
+    })
+
+
+
+
+Step 4: LLM Integration (OpenAI)
+
+import os
+import openai
+from dotenv import load_dotenv
+from app.prompts import build_prompt
+
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+def generate_documentation(code_snippet: str) -> str:
+    prompt = build_prompt(code_snippet)
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful code documentation generator."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.4
+    )
+    return response['choices'][0]['message']['content']
+
+
+
+Step 5: Prompt Template
+
+def build_prompt(code_snippet: str) -> str:
+    return f"""
+Analyze the following code and generate human-readable documentation explaining:
+- What the code does
+- Its input and output
+- Any edge cases or logic
+- An example use case
+
+Code:
+```python
+{code_snippet}
+
+
+
+Documentation:
+"""
+
+---
+
+### 🔹 Step 6: Web Template
+
+**`templates/index.html`**
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Legacy Code Doc Generator</title>
+</head>
+<body>
+    <h1>📄 Legacy Code Documentation Generator</h1>
+    <form method="post" action="/generate">
+        <textarea name="code_snippet" rows="15" cols="80">{{ code_snippet or '' }}</textarea><br>
+        <button type="submit">Generate Documentation</button>
+    </form>
+
+    {% if documentation %}
+        <h2>📝 Generated Documentation</h2>
+        <pre>{{ documentation }}</pre>
+    {% endif %}
+</body>
+</html>
+
+
+
+
+Step 7: .env File
+
+OPENAI_API_KEY=your-openai-api-key-here
+
+
+
+Step 8: Run It!
+
+uvicorn app.main:app --reload
+
+
+
+Then open your browser at: http://127.0.0.1:8000
+
+
+Next Steps / Add-ons
+
+✅ Syntax highlighting with highlight.js
+
+✅ Markdown rendering (markdown2)
+
+✅ Export documentation to .md or .html
+
+✅ Multi-language support (detect language)
+
+✅ GitHub integration (read from files or repos)
