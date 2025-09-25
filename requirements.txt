@@ -5,10 +5,13 @@ python-dotenv
 google-generativeai
 python-multipart
 aiofiles
+PyPDF2
+requests
+markdown2
+pygments
+gitpython
 
 # Optional / extras:
 # openai
 # httpx
 # langchain
-# markdown2
-# pygments

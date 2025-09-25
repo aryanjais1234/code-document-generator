@@ -284,6 +284,92 @@ body {
   background: transparent;
   border: none;
   padding: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.attach-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* GitHub Analysis Results */
+.github-analysis-result {
+  border: 1px solid rgba(100, 200, 100, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px 0;
+  background: rgba(100, 200, 100, 0.05);
+}
+
+.github-analysis-result h3 {
+  color: #7dd3fc;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+/* File Analysis Results */
+.file-analysis-result {
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px 0;
+  background: rgba(100, 150, 255, 0.05);
+}
+
+.file-analysis-result h3 {
+  color: #93c5fd;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+/* Documentation Content Styling */
+.documentation-content {
+  margin-top: 16px;
+  line-height: 1.6;
+}
+
+.documentation-content h1, 
+.documentation-content h2, 
+.documentation-content h3 {
+  color: #fbbf24;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.documentation-content code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.documentation-content pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  border-left: 4px solid var(--accent);
+}
+
+/* Improved file preview */
+.preview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin: 4px 0;
+}
+
+/* GitHub input section styling */
+.github-input-section {
+  background: rgba(100, 200, 100, 0.1);
+  border: 1px solid rgba(100, 200, 100, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+}
   font-size: 20px;
   border-radius: 8px;
   color: var(--muted);
