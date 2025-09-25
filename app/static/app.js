@@ -16,6 +16,13 @@ const newChatBtn = document.getElementById('newChatBtn');
 const sidebar = document.getElementById('sidebar');
 const drawerBtn = document.getElementById('drawerBtn');
 
+// New GitHub functionality elements
+const githubBtn = document.getElementById('githubBtn');
+const githubSection = document.getElementById('githubSection');
+const githubUrlInput = document.getElementById('githubUrlInput');
+const analyzeGithubBtn = document.getElementById('analyzeGithubBtn');
+const cancelGithubBtn = document.getElementById('cancelGithubBtn');
+
 // --- DATA STRUCTURES ---
 let history = JSON.parse(localStorage.getItem('lcda_history') || '[]');
 let currentChat = [];
@@ -25,6 +32,95 @@ let currentChatId = null;
 drawerBtn.addEventListener('click', () => {
     sidebar.classList.toggle('sidebar-open');
 });
+
+// --- GITHUB FUNCTIONALITY ---
+githubBtn.addEventListener('click', () => {
+    githubSection.style.display = githubSection.style.display === 'none' ? 'block' : 'none';
+    if (githubSection.style.display === 'block') {
+        githubUrlInput.focus();
+    }
+});
+
+cancelGithubBtn.addEventListener('click', () => {
+    githubSection.style.display = 'none';
+    githubUrlInput.value = '';
+});
+
+analyzeGithubBtn.addEventListener('click', async () => {
+    const githubUrl = githubUrlInput.value.trim();
+    if (!githubUrl) {
+        alert('Please enter a GitHub repository URL');
+        return;
+    }
+    
+    if (!githubUrl.includes('github.com')) {
+        alert('Please enter a valid GitHub repository URL');
+        return;
+    }
+    
+    await analyzeGitHubRepository(githubUrl);
+});
+
+// Allow Enter key to trigger GitHub analysis
+githubUrlInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        analyzeGithubBtn.click();
+    }
+});
+
+async function analyzeGitHubRepository(githubUrl) {
+    const userMessage = `Analyzing GitHub repository: ${githubUrl}`;
+    addMessageToUI(userMessage, 'user');
+    
+    const assistantMessage = addMessageToUI('🔍 Analyzing GitHub repository... This may take a moment.', 'assistant');
+    
+    try {
+        const formData = new FormData();
+        formData.append('github_url', githubUrl);
+        
+        const response = await fetch('/analyze-github', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            const repoInfo = data.repository_info;
+            const documentation = data.documentation;
+            
+            // Update the assistant message with results
+            const resultHtml = `
+                <div class="github-analysis-result">
+                    <h3>📊 Repository Analysis Complete</h3>
+                    <p><strong>Repository:</strong> ${repoInfo.owner}/${repoInfo.name}</p>
+                    <p><strong>Files Analyzed:</strong> ${repoInfo.files_analyzed}</p>
+                    <div class="documentation-content">
+                        ${formatResponseToHTML(documentation)}
+                    </div>
+                </div>
+            `;
+            assistantMessage.innerHTML = resultHtml;
+            
+            // Save to chat history
+            currentChat.push({ role: 'user', content: userMessage });
+            currentChat.push({ role: 'assistant', content: documentation });
+            saveCurrentChat();
+            
+        } else {
+            assistantMessage.innerHTML = `❌ Error analyzing repository: ${data.error}`;
+        }
+        
+    } catch (error) {
+        assistantMessage.innerHTML = `❌ Error analyzing repository: ${error.message}`;
+    }
+    
+    // Hide GitHub section after analysis
+    githubSection.style.display = 'none';
+    githubUrlInput.value = '';
+    
+    chat.scrollTop = chat.scrollHeight;
+}
 
 // --- RESPONSE FORMATTING ---
 
@@ -233,15 +329,83 @@ textInput.addEventListener('keydown', (e) => {
   }
 });
 
-fileInput.addEventListener('change', () => {
+fileInput.addEventListener('change', async () => {
     previewArea.innerHTML = '';
+    if (fileInput.files.length === 0) return;
+    
+    // Show file previews
     for (const f of fileInput.files) {
         const p = document.createElement('div');
         p.className = 'preview-item';
-        p.textContent = f.name;
+        p.style.cssText = 'padding: 8px; background: rgba(255,255,255,0.1); margin: 4px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;';
+        
+        const fileName = document.createElement('span');
+        fileName.textContent = f.name;
+        
+        const fileSize = document.createElement('small');
+        fileSize.textContent = ` (${(f.size / 1024 / 1024).toFixed(2)} MB)`;
+        fileSize.style.color = 'rgba(255,255,255,0.6)';
+        
+        p.appendChild(fileName);
+        p.appendChild(fileSize);
         previewArea.appendChild(p);
+        
+        // Auto-process PDFs
+        if (f.name.toLowerCase().endsWith('.pdf')) {
+            await uploadAndProcessFile(f);
+        }
     }
 });
+
+async function uploadAndProcessFile(file) {
+    const userMessage = `📎 Uploading file: ${file.name}`;
+    addMessageToUI(userMessage, 'user');
+    
+    const assistantMessage = addMessageToUI('📄 Processing file... Please wait.', 'assistant');
+    
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            if (data.documentation) {
+                // File was processed (e.g., PDF)
+                const resultHtml = `
+                    <div class="file-analysis-result">
+                        <h3>📄 File Analysis Complete</h3>
+                        <p><strong>File:</strong> ${data.filename}</p>
+                        <p><strong>Type:</strong> ${data.content_type}</p>
+                        <div class="documentation-content">
+                            ${formatResponseToHTML(data.documentation)}
+                        </div>
+                    </div>
+                `;
+                assistantMessage.innerHTML = resultHtml;
+                
+                // Save to chat history
+                currentChat.push({ role: 'user', content: userMessage });
+                currentChat.push({ role: 'assistant', content: data.documentation });
+                saveCurrentChat();
+            } else {
+                assistantMessage.innerHTML = `✅ File uploaded successfully: ${data.filename}`;
+            }
+        } else {
+            assistantMessage.innerHTML = `❌ Error uploading file: ${data.error || 'Unknown error'}`;
+        }
+        
+    } catch (error) {
+        assistantMessage.innerHTML = `❌ Error uploading file: ${error.message}`;
+    }
+    
+    chat.scrollTop = chat.scrollHeight;
+}
 
 imgBtn.addEventListener('click', () => {
     fileInput.accept = 'image/*';
